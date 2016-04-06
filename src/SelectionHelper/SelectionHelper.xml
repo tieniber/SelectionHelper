@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="SelectionHelper.widget.SelectionHelper" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>SelectionHelper</name>
+    <description>The description of this widget.</description>
+
+    <icon />
+
+    <properties>
+        <property key="listenerSelector" type="string" required="true">
+            <caption>Listening dataview</caption>
+            <category>Behavior</category>
+            <description>A JQuery selector to access the listening dataview</description>
+        </property>
+    </properties>
+</widget>
+
