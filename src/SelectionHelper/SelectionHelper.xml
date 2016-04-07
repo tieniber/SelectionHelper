@@ -6,11 +6,17 @@
     <icon />
 
     <properties>
-        <property key="listenerSelector" type="string" required="true">
-            <caption>Listening dataview</caption>
+		<property key="listEntity" type="entity" required="false">
+            <caption>List entity</caption>
             <category>Behavior</category>
-            <description>A JQuery selector to access the listening dataview</description>
-        </property>
+            <description>The type of object in the list</description>
+		</property>
+        <property key="dataSourceMF" type="microflow" required="false">
+            <caption>Data source Microflow</caption>
+            <category>Behavior</category>
+            <description>An optional microflow to retrieve the object you want pre-selected. If not selected, the widget will use the context entity.</description>
+			<returnType type="Object" entityProperty="listEntity"/>
+		</property>
     </properties>
 </widget>
 

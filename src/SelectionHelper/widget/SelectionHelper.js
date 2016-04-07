@@ -47,9 +47,10 @@ define([
         colorSelectNode: null,
         colorInputNode: null,
         infoTextNode: null,
+		
 
         // Parameters configured in the Modeler.
-        listenerSelector: "",
+        dataSourceMF: null,
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -57,7 +58,8 @@ define([
         _alertDiv: null,
 		_observer: null,
 		_domToClick: null,
-		_listeningDataView: null,
+		_guidToSelect: null,
+		_runOnce: false,
 
         // dojo.declare.constructor is called to construct the widget instance. Implement to initialize non-primitive properties.
         constructor: function() {
@@ -82,9 +84,7 @@ define([
             this._resetSubscriptions();
             this._updateRendering();
 			
-			
-			this._setupMutationObserver(this.domNode.previousSibling, this._findSelection);
-
+			this._prepClick();
             callback();
         },
 
@@ -107,8 +107,41 @@ define([
         uninitialize: function() {
           logger.debug(this.id + ".uninitialize");
             // Clean up listeners, helper objects, etc. There is no need to remove listeners added with this.connect / this.subscribe / this.own.
+			if(this._observer) {
+				this._observer.disconnect();
+				this._observer = null;
+			}
         },
+		
+		_prepClick: function() {
+			if (this.dataSourceMF) {
+					this._callMF();
+				} else {			
+					this._guidToSelect = this._contextObj.getGuid();
+					this._setupMutationObserver(this.domNode.previousSibling, this._findSelection);
+				}
+		},
 
+		_callMF: function() {
+			mx.data.action({
+				params: {
+					applyto: "selection",
+					actionname: this.dataSourceMF,
+					guids: [this._contextObj.getGuid()]
+				},
+				store: {
+					caller: this.mxform
+				},
+				callback: dojoLang.hitch(this, function (obj) {
+					this._guidToSelect = obj[0].getGuid();
+					this._findSelection();
+				}),
+				error: dojoLang.hitch(this, function (error) {
+					console.log(this.id + ": An error occurred while executing microflow: " + error.description);
+				})
+			}, this);	
+		},
+		
 		//List for changes to the DOM so we know when data is available.
 		_setupMutationObserver: function (node, callback) {
 			MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -145,21 +178,24 @@ define([
 			}
 			
 			if (itemList.length > 0) {
-				var guid = this._contextObj.getGUID();
-				
 				for(var i=0; i<itemList.length; i++) {
-        			if (itemList[i].mxcontext.trackId == guid) {
+        			if (itemList[i].mxcontext.trackId == this._guidToSelect) {
 						var thisItemDom = itemList[i].domNode;
 						
 						//TODO: find another way without the setTimeout: We can't click right away or the listening DV doesn't see it for some reason
 						//thisItemDom.click();
-						if (widget.declaredClass == "mxui.widget.ListView") {
-							setTimeout(function() {thisItemDom.click()},20);
+						if (widget.declaredClass == "mxui.widget.ListView" && !this._runOnce) {
+							thisItemDom.click();
+							setTimeout(function() {thisItemDom.click()},200);
 						} else {
 							thisItemDom.click();
 						}
 						//turn off the mutation listener
-						this._observer.disconnect();
+						if(this._observer) {
+							this._observer.disconnect();
+							this._observer = null;
+						}
+						this._runOnce = true;
 						break;
 					}
     			}
@@ -183,9 +219,27 @@ define([
         },
 
         // Reset subscriptions.
-        _resetSubscriptions: function() {
+		_resetSubscriptions: function() {		
             logger.debug(this.id + "._resetSubscriptions");
             // Release handles on previous object, if any.
+            if (this._handles) {
+                dojoArray.forEach(this._handles, function (handle) {
+                    mx.data.unsubscribe(handle);
+                });
+                this._handles = [];
+            }
+
+            // When a mendix object exists create subscribtions.
+            if (this._contextObj) {
+                var objectHandle = this.subscribe({
+                    guid: this._contextObj.getGuid(),
+                    callback: dojoLang.hitch(this, function(guid) {
+                        this._prepClick();
+                    })
+                });
+	
+                this._handles = [ objectHandle];
+            }
         }
     });
 });
