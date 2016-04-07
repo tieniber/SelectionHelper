@@ -199,6 +199,9 @@ define([
 						break;
 					}
     			}
+			} else if (!this._observer) {
+			//List is empty, so if we don't have a mutation observer, set one up
+				this._setupMutationObserver(this.domNode.previousSibling, this._findSelection);
 			}
 		},
 		
