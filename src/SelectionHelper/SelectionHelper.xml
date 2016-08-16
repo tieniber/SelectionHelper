@@ -12,11 +12,17 @@
             <description>The type of object in the list</description>
 		</property>
         <property key="dataSourceMF" type="microflow" required="false">
-            <caption>Data source Microflow</caption>
+            <caption>Data source MF (one)</caption>
             <category>Behavior</category>
             <description>An optional microflow to retrieve the object you want pre-selected. If not selected, the widget will use the context entity.</description>
 			<returnType type="Object" entityProperty="listEntity"/>
 		</property>
+        <property key="dataSourceListMF" type="microflow" required="false">
+            <caption>Data source MF (list)</caption>
+            <category>Behavior</category>
+            <description>An optional microflow to retrieve a list of objects you want pre-selected.</description>
+			<returnType type="Object" isList="true" entityProperty="listEntity"/>
+		</property>		
     </properties>
 </widget>
 
