@@ -22,9 +22,10 @@ define([
     "mxui/widget/_WidgetBase",
 
     "dojo/_base/array",
-    "dojo/_base/lang"
+    "dojo/_base/lang",
+    "dojo/dom-class",
 
-], function(declare, _WidgetBase, dojoArray, dojoLang) {
+], function(declare, _WidgetBase, dojoArray, dojoLang, domClass) {
     "use strict";
 
     // Declare widget's prototype.
@@ -35,6 +36,7 @@ define([
         listEntity: "",
 		dataSourceMF: "",
 		dataSourceListMF: "",
+        listenRef: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -79,6 +81,8 @@ define([
 					this._callListMF();
 			} else if (this.dataSourceMF) {
 					this._callMF();
+            } else if (this.listenRef) {
+                    this._setSelectionFromReference();
 			} else {
 				//this._guidToSelect = this._contextObj.getGuid();
 				this._setupMutationObserver(this.domNode.previousSibling, this._findSelection);
@@ -92,9 +96,7 @@ define([
 					actionname: this.dataSourceMF,
 					guids: [this._contextObj.getGuid()]
 				},
-				store: {
-					caller: this.mxform
-				},
+				origin: this.mxform,
 				callback: dojoLang.hitch(this, function (objs) {
 					//this._guidToSelect = objs[0].getGuid();
 					this._findSelection(null, null, objs);
@@ -125,6 +127,11 @@ define([
 			}, this);
 		},
 
+        _setSelectionFromReference: function() {
+            var refGuid = this._contextObj.get(this.listenRef.split("/")[0]);
+            this._findSelection(null, null, null, [refGuid]);
+        },
+
 		//List for changes to the DOM so we know when data is available.
 		_setupMutationObserver: function (node, callback) {
 			MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -143,15 +150,19 @@ define([
 			});
 		},
 
-		_findSelection: function(mutations, mutationObserver, objs) {
-			if(objs == null) {
-				objs = [this._contextObj];
-			}
-
-			var guidsToSelect = [];
-			for (var i=0; i<objs.length; i++) {
-				guidsToSelect.push(objs[i].getGuid());
-			}
+		_findSelection: function(mutations, mutationObserver, objs, guids) {
+            var guidsToSelect = [];
+            if (guids) {
+                guidsToSelect = guids;
+            } else {
+                if(objs == null) {
+    				objs = [this._contextObj];
+    			} else {
+                    for (var i=0; i<objs.length; i++) {
+        				guidsToSelect.push(objs[i].getGuid());
+        			}
+                }
+            }
 
 			//Find the list view
 			var prevSib = this.domNode.previousSibling;
@@ -183,7 +194,9 @@ define([
 							widget.selectRow(thisItemDom);
 							widget._addToSelection(itemList[i].mxcontext.trackId);
 						} else {
-							thisItemDom.click();
+                            if(!domClass.contains(thisItemDom, "selected")) {
+                                thisItemDom.click();
+                            }
 						}
 						//turn off the mutation listener
 						if(this._observer) {
@@ -221,7 +234,19 @@ define([
                     })
                 });
 
-                this._handles = [ objectHandle];
+                this._handles.push(objectHandle);
+            }
+
+            if (this._contextObj && this.listenRef) {
+                var refHandle = this.subscribe({
+                    guid: this._contextObj.getGuid(),
+                    attr: this.listenRef.split("/")[0],
+                    callback: dojoLang.hitch(this, function(guid) {
+                        this._setSelectionFromReference();
+                    })
+                });
+
+                this._handles.push(refHandle);
             }
         }
     });
