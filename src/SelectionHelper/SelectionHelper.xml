@@ -6,27 +6,10 @@
     <icon />
 
     <properties>
-		<property key="listEntity" type="entity" required="false">
-            <caption>List entity</caption>
-            <category>Behavior</category>
-            <description>The type of object in the list</description>
-		</property>
         <property key="listenRef" type="entity" isPath="yes" pathType="reference" allowNonPersistableEntities="true" required="false">
             <caption>Listener Reference</caption>
             <category>Behavior</category>
-            <description>An optional reference from the context entity to listen to for the selection. Should be the same type as the list entity. If not selected, the widget will use the context entity.</description>
-		</property>
-        <property key="dataSourceMF" type="microflow" required="false">
-            <caption>Data source MF (one)</caption>
-            <category>Behavior</category>
-            <description>An optional microflow to retrieve the object you want pre-selected. If not selected, the widget will use the context entity.</description>
-			<returnType type="Object" entityProperty="listEntity"/>
-		</property>
-        <property key="dataSourceListMF" type="microflow" required="false">
-            <caption>Data source MF (list)</caption>
-            <category>Behavior</category>
-            <description>An optional microflow to retrieve a list of objects you want pre-selected.</description>
-			<returnType type="Object" isList="true" entityProperty="listEntity"/>
+            <description>An reference from the context entity to listen to for the selection. Should be the same type as the list entity. If not selected, the widget will use the context entity.</description>
 		</property>
     </properties>
 </widget>
