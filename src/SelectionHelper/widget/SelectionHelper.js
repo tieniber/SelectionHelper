@@ -71,7 +71,7 @@ define([
 							var matches = items.filter(function(item) {
 								return item.getGuid() === selectedGuid;
 							});
-							if(matches) {
+							if(matches && matches.length > 0) {
 								this._addToSelection(selectedGuid);	
 								matches[0].select();
 							}	
